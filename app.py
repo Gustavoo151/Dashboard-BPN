@@ -1,87 +1,101 @@
-import dash
+from dash import dash, dash_table
 from dash import html, dcc
 from dash.dependencies import Input, Output
-import plotly.express as px
 import pandas as pd
-import dash_table
-from dash.dash_table.Format import Group
+import plotly.graph_objects as go
 
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']  # Aqui vai ser meu CSS
-
-app = dash.Dash(__name__)#, external_stylesheets=external_stylesheets)  # Aqui vai ser meu app (Dash
-
-pf = pd.DataFrame({  # Aqui vai ser meu dataFrame
-    "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-    "Amount": [4, 1, 2, 2, 4, 5],
-    "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
-})
+app = dash.Dash(__name__)
 
 df = pd.read_csv('C:/Users\joseg\PycharmProjects\Dashboards Interativos com Python/testeCSVAlterado.csv')
 
-
-fig2 = px.bar(df, x="id", y="lift", color="quali", title="Análise de Lift, Qualidade e Confiança por Entrada")
-
-
-# ======================================================================================================================
-# Layout
-
-# O app.layout é o que vai ser renderizado na tela
-app.layout = dash.html.Div(id ="div1",
-    children=[  # O Children é o que vai ser renderizado dentro do app.layout
-        dash.html.H1(children='Dash Board Análise de Baixo Peso ao Nascer', id="h1"),  # Aqui vai ser meu titulo
-
-        html.Label('Selecione um ID:'),
-        dcc.Dropdown(
-            id='id-dropdown',
-            options=[{'label': str(id_value), 'value': id_value} for id_value in df['id'].unique()],
-            value=df['id'].unique()[0],  # Valor inicial do dropdown
-            style={"margin-bottom": "25px"}
+# Criando o gráfico de barras com a relação entre Dp e Dn
+figura_Dp_Dn = go.Figure(
+    data=[
+        go.Bar(
+            x=[0],
+            y=[df['Dp'][0]],
+            text=[f'{df["Dp"][0]}'],
+            textposition='auto',
+            name='Com baixo peso',
+            marker=dict(color=['#7D8AFF'])
         ),
-
-        html.Div(id='desc-output', style={"margin-bottom": "25px"}),
-
-        dcc.Graph(  # Aqui vai ser meu grafico
-            id='graph2',
-            figure=fig2
-        ),
-
-
-
-
-        html.Label('Mostrar Alvos do Dataset:'),
-        dcc.Dropdown(
-            options=[
-                {'label': 'Sim', 'value': 's'},  # Aqui vai ser meu dropdown
-                {'label': 'Não', 'value': 'n'},
-            ],
-            value='s', style={"margin-bottm": "25px"} # Aqui vai ser o valor inicial do meu dropdown
-        ),
-        dash_table.DataTable(
-            id='datatable',
-            columns=[{'name': col, 'id': col} for col in df.columns],
-            data=df[df['alvo'] == 's'].to_dict('records'),  # Inicialmente, exibe os dados para 'Sim'
-        ), # Aqui vai ser meu grafico com base no dropdown e selecionando o alvo
-
-
-
-
+        go.Bar(
+            x=[1],
+            y=[df['Dn'][0]],
+            text=[f'{df["Dn"][0]}'],
+            textposition='auto',
+            name='Sem baixo peso',
+            marker=dict(color=['#4252DD'])
+        )
     ]
 )
+figura_Dp_Dn.update_layout(title_text='Total de exemplos na base de dados')
+figura_Dp_Dn.update_yaxes(title_text='Número de crianças')
+figura_Dp_Dn.update_xaxes(tickvals=[0, 1], ticktext=['Com baixo peso', 'Sem baixo peso'])
+######################################################################
 
-# Callback para atualizar a tabela com base na seleção do dropdown
+# Tabela de descrição dos subgrupos
+
+# Criando um DataFrame com as descrições dos subgrupos
+subgroups_df = df[['A', 'I', 'SUPP', 'itemDom', 'desc', 'FP', 'quali', 'lift', 'conf', 'cov', 'chi', 'pvalue', 'sup_p',]]
+
+table_descricao_subgrupos = dash_table.DataTable(
+    id='table',
+    columns=[{"name": i, "id": i} for i in subgroups_df.columns],
+    data=subgroups_df.to_dict('records'),
+)
+
+
+######################################################################
+
+app.layout = html.Div(id="div1", children=[
+    # Adicionando o título
+    html.H1(children='Análise de Peso Baixo ao Nascer (BPN)', id="h1"),
+
+    html.Label('Mostrar Alvos do Dataset:'),
+    dcc.Dropdown(
+        options=[
+            {'label': 'Sim', 'value': 's'},
+            {'label': 'Não', 'value': 'n'},
+        ],
+        value='s', style={"margin-bottm": "25px"}
+    ),
+
+    html.Label('Selecione um ID:'),
+    dcc.Dropdown(
+        id='id-dropdown',
+        options=[{'label': str(id_value), 'value': id_value} for id_value in df['id'].unique()],
+        value=df['id'].unique()[0],
+        style={"margin-bottom": "25px"}
+    ),
+
+    html.Div(id='desc-output', style={"margin-bottom": "25px"}),
+
+    # Adicionando a tabela de descrição dos subgrupos
+    table_descricao_subgrupos
+
+    # Adicionando o gráfico de Total de exemplos na base de dados
+    dcc.Graph(id='Relação de numero de exemplos da base', figure=figura_Dp_Dn),
+
+
+])
+
+
 @app.callback(
     Output('datatable', 'data'),
     [Input('alvo-dropdown', 'value')]
 )
 def update_table(selected_alvo):
     if selected_alvo == 'all':
-        return df.to_dict('records')
+        return df.drop(
+            ['A', 'I', 'SUPP', 'itemDom', 'desc', 'FP', 'quali', 'lift', 'conf', 'cov', 'chi', 'pvalue', 'sup_p',
+             'sup_n'
+             ], axis=1).to_dict('records')
     else:
         filtered_df = df[df['alvo'] == selected_alvo]
-        return filtered_df.to_dict('records')
+        return filtered_df.drop(['desc', 'itemDom'], axis=1).to_dict('records')
 
 
-# Callback para atualizar o conteúdo com base no ID selecionado
 @app.callback(
     Output('desc-output', 'children'),
     [Input('id-dropdown', 'value')]
@@ -91,9 +105,5 @@ def update_output(selected_id):
     return f'Descrição para o ID {selected_id}: {selected_desc}'
 
 
-# ======================================================================================================================
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-# Para executar o programa, digite no terminal: python app.py
