@@ -6,9 +6,9 @@ def show_CSV(csv_file):
         line = line.split(',')
         print(line[14])
 
-csv_file = open('RID_DM_peso_familia_410750_WRAccAND_sim0.4k10ks2.csv', 'r')
+# csv_file = open('RID_DM_peso_familia_410750_WRAccAND_sim0.4k10ks2.csv', 'r')
 
-show_CSV(csv_file)
+# show_CSV(csv_file)
 
 
 # def replace_at(string: str) -> str:

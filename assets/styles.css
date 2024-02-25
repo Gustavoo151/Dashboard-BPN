@@ -12,3 +12,91 @@ html{
 .div1{
     font-size: 100px;
 }
+
+#porcentage_cidade_output {
+    color: blue;
+    font-size: 30px;
+    margin: 10px;
+}
+
+.text-taxa{
+    color: #656565;
+    text-align: center;
+    margin-left: 30px;
+}
+
+.text-normal {
+    color: #656565;
+    font-size: 30px;
+    text-align: center;
+}
+
+.text-highlight {
+    color: #4252DD;
+}
+
+.text-percentage {
+    color: red;
+    font-weight: bold;
+    font-size: 75px;
+    text-align: center;
+    margin-left: 40px;
+}
+
+.text-title {
+    color: #000000;
+    font-size: 30px;
+    font-weight: bold;
+    margin-left: 30px;
+    text-align: center;
+}
+
+.text-BPN {
+    color: #4252DD;
+    font-size: 30px;
+    text-align: center;
+
+}.text-BPN2{
+    color: #4252DD;
+    font-size: 30px;
+    text-align: center;
+    margin-left: 40px;
+}
+
+
+.tabela-descricao {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    border: 4px solid #656565;
+    font-size: 25px;
+    color: #000000;
+    text-align: left !important;
+}
+
+.text-normal-lift {
+    color: #656565;
+    font-size: 30px;
+    text-align: center;
+}
+
+.text-highlight-lift {
+    color: #4252DD;
+    font-weight: bold;
+    font-size: 33px;
+}
+
+.text-normal-lift-center {
+    color: #656565;
+    font-size: 30px;
+    text-align: center;
+    margin-left: 40px;
+}
+
+.text-highlight-lift-center {
+    color: #4252DD;
+    font-weight: bold;
+    font-size: 30px;
+    text-align: center;
+    margin-left: 40px;
+}
