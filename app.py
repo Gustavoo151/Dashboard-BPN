@@ -30,7 +30,7 @@ figura_Dp_Dn = go.Figure(
 )
 figura_Dp_Dn.update_layout(title_text='Total de exemplos da cidade')
 figura_Dp_Dn.update_yaxes(title_text='Número de crianças')
-figura_Dp_Dn.update_xaxes(tickvals=[0, 1], ticktext=['Com baixo peso', 'Sem baixo peso'])
+figura_Dp_Dn.update_xaxes(tickvals=[0, 1], ticktext=['Com baixo peso', 'Sem baixo peso']),
 ######################################################################
 
 
@@ -51,7 +51,7 @@ def exemplos_subgrupo_bar(selected_id):
                 y=[tp],
                 text=[f'{tp}'],
                 textposition='auto',
-                name='Com baixo peso',
+                name='',
                 marker=dict(color=['#7D8AFF'])
             ),
             go.Bar(
@@ -59,12 +59,12 @@ def exemplos_subgrupo_bar(selected_id):
                 y=[fp],
                 text=[f'{fp}'],
                 textposition='auto',
-                name='Sem baixo peso',
+                name='',
                 marker=dict(color=['#4252DD'])
             )
         ]
     )
-    figura_Tp_Fp.update_layout(title_text='Total de exemplos no subgrupo selecionado', barmode='group')
+    figura_Tp_Fp.update_layout(title_text='Total de exemplos no subgrupo', barmode='group')
     figura_Tp_Fp.update_yaxes(title_text='Número de crianças')
     figura_Tp_Fp.update_xaxes(tickvals=[0, 1], ticktext=['Com baixo peso', 'Sem baixo peso'])
 
@@ -75,14 +75,13 @@ def exemplos_subgrupo_bar(selected_id):
 # Tabela de descrição dos subgrupos
 
 # Criando um DataFrame com as descrições dos subgrupos geral
-
-subgroups_df = df[['id', 'Dp', 'Dn', 'D', 'FP', 'lift']]
+subgroups_df = df[df['alvo'] == 's'][['id', 'Dp', 'Dn', 'D', 'FP', 'lift']]
 
 table_descricao_subgrupos = dash_table.DataTable(
     id='table',
     columns=[{"name": i, "id": i} for i in subgroups_df.columns],
     data=subgroups_df.to_dict('records'),
-    style_table={'overflowY': 'auto', 'maxHeight': '300px'},
+    style_table={'overflowY': 'auto', 'maxHeight': '300px', 'width': '600px'},
 )
 ######################################################################
 
@@ -155,9 +154,9 @@ def update_lift_text(selected_id):
             html.Span(f'{selected_lift*100:.2f}%', className='text-percentage'),
             html.Br(),
             html.Span('de chance ter ', className='text-normal-lift'),
-            html.Span('Baixo Peso Ao', className='text-highlight-lift'),
+            html.Span('Baixo Peso ', className='text-highlight-lift'),
             html.Br(),
-            html.Span('Nascer (BPN)', className='text-highlight-lift-center'),
+            html.Span('Ao Nascer (BPN)', className='text-highlight-lift-center'),
     ]
 ######################################################################
 
@@ -175,61 +174,62 @@ def update_supp_text(selected_id):
 
 # Layout do app
 app.layout = html.Div(id="div1", children=[
+
     # Adicionando o título
     html.H1(children='Análise de Baixo Peso ao Nascer (BPN)', id="h1", className='text-title'),
 
-    # Adicionando a tabela de descrição dos subgrupos
-    table_descricao_subgrupos,
+    # Adicionando o título dos subgrupos
+    html.H2(children='Subgrupos desta cidade:'),
 
-    # # Adicionando o gráfico de Total de exemplos na base de dados
-    # dcc.Graph(id='Relação de numero de exemplos da base', figure=figura_Dp_Dn),
-    #
-    # # Texto com o valor do suporte
-    # html.Div(id='supp-output'),
+    html.Div(id='Tabela-texto-explicativo', children=[
+        # Adicionando a tabela de descrição dos subgrupos
+        table_descricao_subgrupos,
 
-    html.Div([
-        dcc.Graph(id='Relação de numero de exemplos da base', figure=figura_Dp_Dn),
-        dcc.Graph(id='exemplos_subgrupo_bar', figure=figura_Dp_Dn)
+        #  Texto explicativo sobre o BPN
+        html.Plaintext(children='O baixo peso ao nascer, definido como um peso inferior a 2.500 gramas,\n'
+                                'é um problema de saúde pública que afeta milhões de bebês em todo o mundo. \n'
+                                'Essa condição está associada a diversos fatores de risco, tanto para a mãe\n'
+                                'quanto para o bebê, e pode ter consequências graves a curto e longo prazo.\n \n'
+                                ' Este dashboard tem como objetivo auxiliar na compreensão do caso brasileiro \n'
+                                'de baixo peso ao nascer, utilizando um algoritmo de mineração de subgrupos nas\n'
+                                'bases de dados do SINASC (Sistema de Informação sobre Nascidos Vivos) e CADU \n'
+                                '(Cadastro Único de Programas Sociais).', className='text-intro'),
     ], style={'display': 'flex'}),
 
+    html.Div(id="Graficos-cidade", children=[
+            # Adicionando o gráfico de Total de exemplos na base de dados
+            dcc.Graph(id='Relação de numero de exemplos da base', figure=figura_Dp_Dn,  style={'margin-left': '120px', 'margin-top': '30px', 'width': '800px', 'height': '400px'}),
+            # Texto com porcentagem de crianças com baixo peso na cidade
+            html.Div(id='porcentage_cidade_output', style={'margin-left': '60px', 'margin-top': '80px'}),
+        ], style={'display': 'flex'}),
 
+    html.Div(style={'border-top': '3px solid black', 'height': '1px', 'margin': '20px 0'}),
 
-
-    # Texto com porcentagem de crianças com baixo peso na cidade
-    html.Div(id='porcentage_cidade_output'),
 
     # Titulo para o dash board dos subgrupos individuais
     html.H1(children='Análise por Subgrupo', id="h1", className='text-title'),
 
-    # Adicionando a tabela de descrição dos subgrupos individual
+    html.Label('Selecione ou digite o ID do subgrupo:', style={"font-size": "20px"}),
+        dcc.Dropdown(
+            id='id-dropdown',
+            options=[{'label': str(id_value), 'value': id_value} for id_value in df['id'].unique()],
+            value=df['id'].unique()[0],
+            style={"margin-bottom": "25px"},
+        ),
 
-    # html.Label('Mostrar Alvos do Dataset:'),
-    # dcc.Dropdown(
-    #     options=[
-    #         {'label': 'Sim', 'value': 's'},
-    #         {'label': 'Não', 'value': 'n'},
-    #     ],
-    #     value='s', style={"margin-bottm": "25px"}
-    # ),
 
-    html.Label('Selecione um ID:'),
-    dcc.Dropdown(
-        id='id-dropdown',
-        options=[{'label': str(id_value), 'value': id_value} for id_value in df['id'].unique()],
-        value=df['id'].unique()[0],
-        style={"margin-bottom": "25px"},
-    ),
-    html.Div(id='desc-output', style={"margin-bottom": "25px"}, className='tabela-descricao'),
+    html.Div(id="Graficos-subgrupo", children=[
+        # Adicionando a tabela de descrição dos subgrupos individual
+        html.Div(id='desc-output', style={"margin-bottom": "25px", 'width': '600px'}, className='tabela-descricao', ),
 
-    # Adicionando o gráfico de barras com a relação entre TP e FP absolutos
-    dcc.Graph(id='exemplos_subgrupo_bar', figure=figura_Dp_Dn),
+        # Adicionando o gráfico de barras com a relação entre TP e FP absolutos
+        dcc.Graph(id='exemplos_subgrupo_bar', figure=figura_Dp_Dn, style={'width': '700px', 'height': '500px'}),
 
-    # Texto mostrando o valor de lift do subgrupo
-    html.Div(id='lift-text-output'),
+        # Texto mostrando o valor de lift do subgrupo
+        html.Div(id='lift-text-output', style={'margin-top': '60px'}),
+
+    ], style={'display': 'flex'}),
 ])
-
-######################################################################
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
